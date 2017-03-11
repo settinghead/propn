@@ -7,7 +7,7 @@ export default class PropNet {
     prop(name, defn) { _t(); }
     eprop(name, defn) { _t(); }
     cells(...names: String[]) : Cell[] { _t(); return []; }
-    cell(name: String, propagator: Propagator) : Cell { _t(); return new Cell(); }
+    cell(name: String, propagator?: Propagator) : Cell { _t(); return new Cell(); }
 
     p: { [key: string]: Propagator }
     e: { [key: string]: Propagator }
