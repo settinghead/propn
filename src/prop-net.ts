@@ -8,6 +8,10 @@ export default class PropNet {
     eprop(name, defn) { _t(); }
     cells(...names: String[]) : Cell[] { _t(); return []; }
     cell(name: String, propagator?: Propagator) : Cell { _t(); return new Cell(); }
+    attach(...cells: (Cell | any)[]) : void {
+        _t();
+    }
+    id(op: POp, c:Cell) : void { _t(); }
 
     p: { [key: string]: Propagator }
     e: { [key: string]: Propagator }
@@ -37,15 +41,13 @@ export class E {
 
 type POp = (...vals) => any; //TODO
 
-export function attach(op: POp, ...cells: Cell[]) : void {
-    _t();
-}
-
 export const P: { [key: string]: POp } =  {
     "*": (first, mutiplier, result) => { _t(); },
     "-": (first, subtractor, result) => { _t(); },
     "+": (first, second, sum) => { _t(); },
 }
+
+export const NOTHING = "settinghead.org/prpn/nothing";
 
 function _t() {
     throw 'not implemented';
