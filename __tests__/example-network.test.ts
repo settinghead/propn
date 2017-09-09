@@ -7,25 +7,25 @@ describe("fehrenheit-to-celcius", () =>{
         prpn = new PN();
     });
 
-    it.only("sum", async () => {
+    it("sum", async () => {
         const [a, b] = prpn.cells('a', 'b');
-        // a.addContent(3);
-        // b.addContent(2);
-        // const answer = prpn.cell('answer', E['+'](a, b));
-        // await prpn.run();
-        // expect(answer.content()).to.equal(5);
+        a.addContent(3);
+        b.addContent(2);
+        const answer = prpn.cell('answer', E['+'](a, b));
+        await prpn.run();
+        expect(answer.content()).to.equal(5);
     });
 
-    it("late binding", async() => {
+    it.only("late binding", async() => {
         const [operation, answer] = prpn.cells("operation", "answer");
         prpn.attach(operation, 3, 4, answer);
 
-        await prpn.run();
-        expect(answer.content()).to.equal(NOTHING);
+        // await prpn.run();
+        // expect(answer.content()).to.equal(NOTHING);
 
-        prpn.id(P['*'], operation);
-        await prpn.run();
-        expect(answer.content()).to.equal(NOTHING);
+        // prpn.id(P['*'], operation);
+        // await prpn.run();
+        // expect(answer.content()).to.equal(NOTHING);
     });
 
     it("fehrenheit-to-celcius: verbose form", async () => {

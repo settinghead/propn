@@ -1,58 +1,148 @@
+import { union, map, includes, each } from "lodash";
+
 export default class PropNet {
-    static cells(...args) : CellDef[] { _t(); return []; }
+    static cells(...args) : Cell<any>[] { _t(); return []; }
     static const(val) { return (c) => _t(); }
     static "-"(a, b, c) {}
     static "*"(a, b, c) {}
-    private alertedPropagators : Propagator[] = [];
+    static "+"(a, b, c) {}
+    private _propagatorsEverAlerted: PropagatorCell[] = [];
+    private _alertedPropagators : PropagatorCell[] = [];
+    private _registry: {[name:string] : Cell<any>} = {};
 
+    alertPropagator(pCell: PropagatorCell) {
+        this.alertPropagators([pCell]);
+    }
+
+    alertPropagators(propagators: PropagatorCell[]) {
+        
+        this._propagatorsEverAlerted = union(this._propagatorsEverAlerted, propagators);
+        this._alertedPropagators = union(this._alertedPropagators, propagators);
+    }
+    addPropagator(_neighbors: Cell<any>[], p: ExecFn) {
+        const pCell = new PropagatorCell(this, p);
+       _neighbors.forEach((cell) => {
+           cell.addNeighbor(pCell);
+       });
+       this.alertPropagator(pCell);
+   }
     prop(name, defn) { _t(); }
     eprop(name, defn) { _t(); }
-    cells(...names: String[]) : Cell[] { _t(); return []; }
-    cell(name: String, propagator?: Propagator) : Cell { _t(); return new Cell(); }
-    attach(...cells: (Cell | any)[]) : void {
+    cells(...names: string[]) : Cell<any>[] { 
+        const r : Cell<any>[] = [];
+        names.forEach(n => {
+            r.push(this.cell(n));
+        });
+        return r;
+    }
+    cell<T>(name: string, cell?: Cell<T>) : Cell<T> { 
+        let r : Cell<T>;
+        if(!cell) {
+            r = new Cell(this);            
+        } else {
+            r = cell;
+        }
+        this._registry[name] = r;
+        return r; 
+    }
+    attach(...cells: (Cell<any> | any)[]) : void {
         _t();
     }
-    id(op: POp, c:Cell) : void { _t(); }
+    id(op: POp, c:Cell<any>) : void { _t(); }
 
     p: { [key: string]: Propagator }
     e: { [key: string]: Propagator }
 
     async run() : Promise<number> { 
         let ticks = 0;
-        while(this.alertedPropagators.length > 0) {
+        while(this._alertedPropagators.length > 0) {
             ticks ++;
-            (this.alertedPropagators.pop() as Propagator)();
+            (this._alertedPropagators.pop() as PropagatorCell).exec();
         }
         return ticks;
      }
 }
 
-export class CellDef {
-
-}
-
-type Propagator = {
-    (...cells: Cell[]): void,
-    _net: PropNet
-};
+type Propagator = (...cells: Cell<any>[]) => void;
 
 export type Nothing = "settinghead.org/prpn/nothing";
 export type Contradiction = "settinghead.org/prpn/contradiction";
 export const NOTHING : Nothing = "settinghead.org/prpn/nothing";
 export const CONTRADICTION : Contradiction = "settinghead.org/prpn/contradiction";
 
-export class Cell {
+export class Cell<T> {
+    constructor(net: PropNet, v? : T | Nothing) {
+        this._net = net;
+        if(v === undefined) {
+            this._content = NOTHING;
+        } else {
+            this._content = v;
+        }
+    }
     _net: PropNet;
-    private _content: any;
+    private _content: T | Nothing;
+    private _neighbors: PropagatorCell[] = [];
     addContent(increment: any):void { 
         let answer = merge(this._content, increment);
+
+        if (answer === CONTRADICTION) {
+            throw new ContradictionError(this._content, increment);
+        }
+
+        if (answer !== this._content) {
+            this._content = answer;
+            this._net.alertPropagators(this._neighbors);
+        }
      };
-    content() : any { _t(); };
+    addNeighbor(neighbor: PropagatorCell) {
+        this._neighbors = union(this._neighbors, [neighbor]);
+    }
+    content() : T | Nothing { return this._content; };
+}
+
+type ExecFn = () => void;
+
+export class PropagatorCell extends Cell<ExecFn> {
+    constructor(net: PropNet, p: ExecFn) {
+        super(net, p);
+    }
+
+    exec() {
+        (this.content() as ExecFn)();
+    }
 }
 
 export class E {
     static "*"(first, mutiplier) { _t(); }
     static "-"(first, subtractor) { _t(); }
+    static "+" = 
+        functionCallPropagator((a, b) => {
+            return a + b;
+        }, true)
+}
+
+function functionCallPropagator(f, strict) {
+    return function(...inputs: Cell<any>[]) : Cell<any> {
+        const net = inputs[0]._net;
+        const answerCell = new Cell(net);
+        net.addPropagator(inputs, toDo);
+        
+        function toDo() : void {
+            var inputContent = inputs.map( (cell: Cell<any>) => { 
+                return cell.content();
+            });
+
+            if (strict && includes(inputContent, NOTHING)) {
+                return;
+            }
+
+            var answer = f.apply(undefined, inputContent);
+            
+            answerCell.addContent(answer);
+        }
+
+        return answerCell;
+    };
 }
 
 type POp = (...vals) => any; //TODO
@@ -115,6 +205,13 @@ function right(a, b) { return b; }
 function mustEq(a, b) { return equivalent(a, b) ? b : CONTRADICTION }
 function hasType(t) { return function (v) { return typeof v === t } }
 function eq(v) { return function(v2) { return v2 === v } }
+
+class ContradictionError extends Error {
+    constructor(oldVal, newVal) {
+        super(oldVal + " contradicts " + newVal);
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
 
 function _t() {
     throw 'not implemented';

@@ -29,6 +29,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/lodash": "^4.14.74",
     "chai": "^4.1.2",
     "jest": "^21.0.2",
     "ts-node": "^3.3.0",
@@ -37,6 +38,7 @@
   "dependencies": {
     "@types/chai": "^4.0.4",
     "@types/jest": "^20.0.8",
-    "@types/node": "^8.0.28"
+    "@types/node": "^8.0.28",
+    "lodash": "^4.17.4"
   }
 }
