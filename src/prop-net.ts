@@ -1,11 +1,11 @@
 import { union, map, includes, each } from "lodash";
 
 export default class PropNet {
-    static cells(...args) : Cell<any>[] { _t(); return []; }
-    static const(val) { return (c) => _t(); }
-    static "-"(a, b, c) {}
-    static "*"(a, b, c) {}
-    static "+"(a, b, c) {}
+    static cells(...names: string[]) : Cell<any>[] { _t(); return []; }
+    static const<T>(val: T) { return (c : any) => _t(); }
+    static "-"(a: number, b: number, c: number) {}
+    static "*"(a: number, b: number, c: number) {}
+    static "+"(a: number, b: number, c: number) {}
     private _propagatorsEverAlerted: PropagatorCell[] = [];
     private _alertedPropagators : PropagatorCell[] = [];
     private _registry: {[name:string] : Cell<any>} = {};
@@ -26,8 +26,8 @@ export default class PropNet {
        });
        this.alertPropagator(pCell);
    }
-    prop(name, defn) { _t(); }
-    eprop(name, defn) { _t(); }
+    prop(name: string, defn: any) { _t(); }
+    eprop(name: string, defn: any) { _t(); }
     cells(...names: string[]) : Cell<any>[] { 
         const r : Cell<any>[] = [];
         names.forEach(n => {
@@ -113,22 +113,22 @@ export class PropagatorCell extends Cell<ExecFn> {
 }
 
 export class E {
-    static "*"(first, mutiplier) { _t(); }
-    static "-"(first, subtractor) { _t(); }
+    static "*"(first: Cell<number>, mutiplier: Cell<number>) { _t(); }
+    static "-"(first: Cell<number>, subtractor: Cell<number>) { _t(); }
     static "+" = 
         functionCallPropagator((a, b) => {
             return a + b;
         }, true)
 }
 
-function functionCallPropagator(f, strict) {
+function functionCallPropagator(f: (...vals: any[]) => any, strict: boolean) {
     return function(...inputs: Cell<any>[]) : Cell<any> {
         const net = inputs[0]._net;
         const answerCell = new Cell(net);
         net.addPropagator(inputs, toDo);
         
         function toDo() : void {
-            var inputContent = inputs.map( (cell: Cell<any>) => { 
+            const inputContent = inputs.map( (cell: Cell<any>) => { 
                 return cell.content();
             });
 
@@ -136,7 +136,7 @@ function functionCallPropagator(f, strict) {
                 return;
             }
 
-            var answer = f.apply(undefined, inputContent);
+            const answer = f.apply(undefined, inputContent);
             
             answerCell.addContent(answer);
         }
@@ -145,7 +145,7 @@ function functionCallPropagator(f, strict) {
     };
 }
 
-type POp = (...vals) => any; //TODO
+type POp = (...vals: any[]) => any; //TODO
 
 export const P: { [key: string]: POp } =  {
     "*": (first, mutiplier, result) => { _t(); },
@@ -153,7 +153,7 @@ export const P: { [key: string]: POp } =  {
     "+": (first, second, sum) => { _t(); },
 }
 
-function merge(content, increment) {
+function merge<T>(content: T, increment: T) {
 	var matchers : [Function, Function, Function][] = [
 		[hasType("number"), hasType("number"), mustEq],
 		[hasType("string"), hasType("string"), mustEq],
@@ -175,14 +175,14 @@ function merge(content, increment) {
 }
 
 
-function equivalent(a, b) {
+function equivalent<T>(a: T, b: T) {
 	const matchers : [Function, Function, Function][] = [
 		[hasType("number"), hasType("number"), floatEq],
 	];
 
 	// try the matchers in order
-	for (var i = 0; i < matchers.length; i++) {
-		var matcher = matchers[i];
+	for (let i = 0; i < matchers.length; i++) {
+		const matcher = matchers[i];
 		if (matcher[0](a) && matcher[1](b)) {
 			return matcher[2](a, b);
 		}
@@ -190,7 +190,7 @@ function equivalent(a, b) {
 
 	return a === b;
 
-	function floatEq(a, b) {
+	function floatEq(a: T, b: T) {
 		// TODO: if problems arise from floating points, uncomment this check
 		// if (typeof a === 'number' && typeof b === 'number') {
 		// 	return Math.abs(a - b) < 0.00001; // XXX
@@ -200,14 +200,14 @@ function equivalent(a, b) {
 }
 
 function anything() { return function () { return true } }
-function left(a, b) { return a; }
-function right(a, b) { return b; }
-function mustEq(a, b) { return equivalent(a, b) ? b : CONTRADICTION }
-function hasType(t) { return function (v) { return typeof v === t } }
-function eq(v) { return function(v2) { return v2 === v } }
+function left<T>(a: T, b: T) { return a; }
+function right<T>(a: T, b: T) { return b; }
+function mustEq<T>(a: T, b: T) { return equivalent(a, b) ? b : CONTRADICTION }
+function hasType(t: string) { return function (v: any) { return typeof v === t } }
+function eq<T>(v: T) { return function(v2: T) { return v2 === v } }
 
 class ContradictionError extends Error {
-    constructor(oldVal, newVal) {
+    constructor(oldVal: any, newVal: any) {
         super(oldVal + " contradicts " + newVal);
         Error.captureStackTrace(this, this.constructor);
     }

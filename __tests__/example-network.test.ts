@@ -19,13 +19,13 @@ describe("fehrenheit-to-celcius", () =>{
     it.only("late binding", async() => {
         const [operation, answer] = prpn.cells("operation", "answer");
         prpn.attach(operation, 3, 4, answer);
+        
+        await prpn.run();
+        expect(answer.content()).to.equal(NOTHING);
 
-        // await prpn.run();
-        // expect(answer.content()).to.equal(NOTHING);
-
-        // prpn.id(P['*'], operation);
-        // await prpn.run();
-        // expect(answer.content()).to.equal(NOTHING);
+        prpn.id(P['*'], operation);
+        await prpn.run();
+        expect(answer.content()).to.equal(12);
     });
 
     it("fehrenheit-to-celcius: verbose form", async () => {
