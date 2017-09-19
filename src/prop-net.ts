@@ -1,11 +1,18 @@
 import { union, map, includes, each } from "lodash";
 
+type SymbolName = string;
+type ValOrSymbolName<T> = T | SymbolName | Cell<T>;
+type Namer = (n: SymbolName) => void;
+
 export default class PropNet {
     static cells(...names: string[]) : Cell<any>[] { _t(); return []; }
     static const<T>(val: T) { return (c : any) => _t(); }
-    static "-"(a: number, b: number, c: number) {}
-    static "*"(a: number, b: number, c: number) {}
-    static "+"(a: number, b: number, c: number) {}
+    static "-"(a: ValOrSymbolName<number>, ...b: ValOrSymbolName<number>[]) : Namer {
+        throw 'not implemented';
+    }
+    static "*"(...nums: ValOrSymbolName<number>[]) : Namer { throw 'Not implemented'; }
+    static "+"(...nums: ValOrSymbolName<number>[]) : Namer { throw 'Not implemented'; }
+    
     private _propagatorsEverAlerted: PropagatorCell[] = [];
     private _alertedPropagators : PropagatorCell[] = [];
     private _registry: {[name:string] : Cell<any>} = {};
@@ -113,8 +120,10 @@ export class PropagatorCell extends Cell<ExecFn> {
 }
 
 export class E {
-    static "*"(first: Cell<number>, mutiplier: Cell<number>) { _t(); }
-    static "-"(first: Cell<number>, subtractor: Cell<number>) { _t(); }
+    static "*"(...nums: ValOrSymbolName<number>[]) : Cell<number> { throw 'not impl'; }
+    static "-"(first: ValOrSymbolName<number>, subtractor: ValOrSymbolName<number>) : Cell<number> { 
+        throw 'not impl';
+     }
     static "+" = 
         functionCallPropagator((a, b) => {
             return a + b;

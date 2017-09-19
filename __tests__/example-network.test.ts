@@ -7,7 +7,7 @@ describe("fehrenheit-to-celcius", () =>{
         prpn = new PN();
     });
 
-    it("sum", async () => {
+    it.only("sum", async () => {
         const [a, b] = prpn.cells('a', 'b');
         a.addContent(3);
         b.addContent(2);
@@ -34,8 +34,8 @@ describe("fehrenheit-to-celcius", () =>{
             PN.const(32)('thirty-two'),
             PN.const(5)('five'),
             PN.const(9)('nine'),
-            PN['-'](f, 'thirty-two', 'f-32'),
-            PN['*']('f-32', 'five', 'c*9'),
+            PN['-'](f, 'thirty-two')('f-32'),
+            PN['*']('f-32', 'five')('c*9'),
         ]);
 
         const [f, c] = prpn.cells('f', 'c');
